@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -10,7 +11,6 @@ app.get("/", (req, res) => {
   res.send("Habit tracker is Running");
 });
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
 const uri =
   "mongodb+srv://habit-tracker-db:zCNlsBQlJIifbJwj@cluster0.kyh1mx2.mongodb.net/?appName=Cluster0";
 
@@ -27,13 +27,23 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+    const db = client.db("habit-track-db");
+    const habitsCollection = db.collection("habits");
+    //! all data find
+    app.get("/habits", async (req, res) => {
+      const result = await habitsCollection.find().toArray();
+
+      res.send(result);
+    });
+
+    //! --------------------------------------
+    //! ++++++++opore kaj++++++++++++++++++
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
-    
     // await client.close();
   }
 }
