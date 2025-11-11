@@ -152,6 +152,37 @@ async function run() {
       }
     });
     //! --------------------------------------
+    //! habit update in my habit pg
+    app.patch("/habits/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updatedData = req.body;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).send({ error: "Invalid habit ID" });
+        }
+
+        const updateFields = {
+          title: updatedData.title,
+          description: updatedData.description,
+          category: updatedData.category,
+          imageURL: updatedData.imageURL || "", // optional re-upload
+          updatedAt: new Date().toISOString(),
+        };
+
+        const result = await habitsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updateFields }
+        );
+
+        res.send({ success: true });
+      } catch (error) {
+        console.error("❌ Failed to update habit:", error);
+        res.status(500).send({ error: "Failed to update habit" });
+      }
+    });
+
+    //! --------------------------------------
     //! ++++++++opore kaj++++++++++++++++++
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
