@@ -148,7 +148,7 @@ async function run() {
       }
     });
     //! --------------------------------------
-    //! habit Mark today
+    //!
 
     app.patch("/habits/:id/complete", verifyToken, async (req, res) => {
       try {
@@ -184,7 +184,10 @@ async function run() {
           }
         );
 
-        res.send({ success: true });
+        res.send({
+          success: true,
+          updateResult,
+        });
       } catch (error) {
         console.error("❌ Failed to mark habit complete:", error);
         res.status(500).send({ error: "Failed to update habit" });
