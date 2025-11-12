@@ -62,7 +62,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const db = client.db("habit-track-db");
     const habitsCollection = db.collection("habits");
     //! all data find
@@ -150,7 +150,7 @@ async function run() {
     //! --------------------------------------
     //! habit Mark today
 
-    app.patch("/habits/:id/complete", async (req, res) => {
+    app.patch("/habits/:id/complete", verifyToken, async (req, res) => {
       try {
         const id = req.params.id;
 
@@ -169,7 +169,10 @@ async function run() {
         );
 
         if (alreadyMarked) {
-          return res.status(400).send({ error: "Already marked today" });
+          return res.status(400).send({
+            error: "Already marked today",
+            message: "⛔ Already marked today",
+          });
         }
 
         const updateResult = await habitsCollection.updateOne(
@@ -276,7 +279,7 @@ async function run() {
     //! --------------------------------------
     //! ++++++++opore kaj++++++++++++++++++
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
