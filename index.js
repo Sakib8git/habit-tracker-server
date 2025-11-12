@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion } = require("mongodb");
+const admin = require("firebase-admin");
+const serviceAccount = require("./serviceKey.json");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 3000;
@@ -11,9 +13,43 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("Habit tracker is Running");
 });
+// !--sdk- firebase-------------------------
 
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+//Note: middle ware---------
+//! middleware-------
+const verifyToken = async (req, res, next) => {
+  const authorization = req.headers.authorization;
+
+  if (!authorization) {
+    return res
+      .status(401)
+      .send({ message: "Unauthorized access: No token provided" });
+  }
+
+  const token = authorization.split(" ")[1]; // ✅ assumes "Bearer <token>"
+
+  if (!token) {
+    return res
+      .status(401)
+      .send({ message: "Unauthorized access: Token missing" });
+  }
+
+  try {
+    await admin.auth().verifyIdToken(token);
+
+    next();
+  } catch (error) {
+    // console.error("Token verification failed:", error);
+    res.status(401).send({ message: "Unauthorized access: Invalid token" });
+  }
+};
+
+// !----------------------------
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.kyh1mx2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-
+// console.log(process.env.DB_USERNAME);
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -95,7 +131,7 @@ async function run() {
     //! habit details
     const { ObjectId } = require("mongodb");
 
-    app.get("/habits/:id", async (req, res) => {
+    app.get("/habits/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id;
         if (!ObjectId.isValid(id)) {
@@ -127,7 +163,7 @@ async function run() {
           return res.status(404).send({ error: "Habit not found" });
         }
 
-        const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+        const today = new Date().toISOString().split("T")[0];
         const alreadyMarked = habit.completionHistory?.some((d) =>
           d.startsWith(today)
         );
@@ -153,7 +189,7 @@ async function run() {
     });
     //! --------------------------------------
     //! habit update in my habit pg
-    app.patch("/habits/:id", async (req, res) => {
+    app.patch("/habits/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id;
         const updatedData = req.body;
