@@ -208,6 +208,36 @@ async function run() {
     });
 
     //! --------------------------------------
+    // !search---------------------------
+    // category banailam
+    function getQueryFromSearchAndCategory(search = "", category = "") {
+      return {
+        isPublic: true,
+        ...(category && category !== "All" && { category }),
+        ...(search && {
+          $or: [
+            { title: { $regex: search, $options: "i" } },
+            { description: { $regex: search, $options: "i" } },
+          ],
+        }),
+      };
+    }
+
+    // search dilam
+    app.get("/public-habits", async (req, res) => {
+      const { search = "", category = "" } = req.query;
+      const query = getQueryFromSearchAndCategory(search, category);
+
+      try {
+        const habits = await db.collection("habits").find(query).toArray();
+        res.send(habits);
+      } catch (err) {
+        console.error("❌ Failed to fetch public habits:", err);
+        res.status(500).send({ error: "Internal server error" });
+      }
+    });
+
+    //! --------------------------------------
     //! ++++++++opore kaj++++++++++++++++++
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
