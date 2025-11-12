@@ -1,3 +1,4 @@
 .env
 serviceKey.json
 .vercel
+node_modules
