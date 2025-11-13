@@ -151,7 +151,7 @@ async function run() {
       const alreadyMarked = habit.completionHistory?.some((d) =>
         d.startsWith(today)
       );
-
+// alreay thakle
       if (alreadyMarked) {
         return res.status(400).send({
           error: "Already marked today",
