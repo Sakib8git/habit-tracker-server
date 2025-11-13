@@ -90,163 +90,133 @@ async function run() {
     //! --------------------------------------
     //! My habit post
     app.post("/habits", async (req, res) => {
-      try {
-        const data = req.body;
+      const data = req.body;
 
-        // Optional: add server-side timestamps if needed
-        data.createdAt = data.createdAt || new Date().toISOString();
-        data.updatedAt = new Date().toISOString();
-        data.currentStreak = data.currentStreak || 0;
-        data.completionHistory = data.completionHistory || [];
+      //  createdAt updatedAt currentStreak completionHistory nilam
+      data.createdAt = data.createdAt || new Date().toISOString();
+      data.updatedAt = new Date().toISOString();
+      data.currentStreak = data.currentStreak || 0;
+      data.completionHistory = data.completionHistory || [];
 
-        const result = await habitsCollection.insertOne(data);
+      const result = await habitsCollection.insertOne(data);
 
-        res.status(201).send(result);
-      } catch (error) {
-        console.error("❌ Failed to insert habit:", error);
-        res.status(500).send({ error: "Failed to add habit" });
-      }
+      res.status(201).send(result);
     });
     //! --------------------------------------
     //! My habit page
     app.get("/my-habits", async (req, res) => {
-      try {
-        const email = req.query.email;
+      const email = req.query.email;
 
-        if (!email) {
-          return res.status(400).send({ error: "Email is required" });
-        }
-
-        const result = await habitsCollection
-          .find({ "user.email": email })
-          .toArray();
-
-        res.send(result);
-      } catch (error) {
-        console.error("❌ Failed to fetch habits:", error);
-        res.status(500).send({ error: "Failed to load habits" });
+      if (!email) {
+        return res.status(400).send({ error: "Email is required" });
       }
+
+      const result = await habitsCollection
+        .find({ "user.email": email })
+        .toArray();
+
+      res.send(result);
     });
     //! --------------------------------------
     //! habit details
     const { ObjectId } = require("mongodb");
 
     app.get("/habits/:id", verifyToken, async (req, res) => {
-      try {
-        const id = req.params.id;
-        if (!ObjectId.isValid(id)) {
-          return res.status(400).send({ error: "Invalid habit ID" });
-        }
-
-        const habit = await habitsCollection.findOne({ _id: new ObjectId(id) });
-        if (!habit) return res.status(404).send({ error: "Habit not found" });
-
-        res.send(habit);
-      } catch (error) {
-        console.error("❌ Failed to fetch habit:", error);
-        res.status(500).send({ error: "Failed to load habit" });
+      const id = req.params.id;
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ error: "Invalid habit ID" });
       }
+
+      const habit = await habitsCollection.findOne({ _id: new ObjectId(id) });
+      if (!habit) return res.status(404).send({ error: "Habit not found" });
+
+      res.send(habit);
     });
     //! --------------------------------------
     //!
 
     app.patch("/habits/:id/complete", verifyToken, async (req, res) => {
-      try {
-        const id = req.params.id;
+      const id = req.params.id;
 
-        if (!ObjectId.isValid(id)) {
-          return res.status(400).send({ error: "Invalid habit ID" });
-        }
-
-        const habit = await habitsCollection.findOne({ _id: new ObjectId(id) });
-        if (!habit) {
-          return res.status(404).send({ error: "Habit not found" });
-        }
-
-        const today = new Date().toISOString().split("T")[0];
-        const alreadyMarked = habit.completionHistory?.some((d) =>
-          d.startsWith(today)
-        );
-
-        if (alreadyMarked) {
-          return res.status(400).send({
-            error: "Already marked today",
-            message: "⛔ Already marked today",
-          });
-        }
-
-        const updateResult = await habitsCollection.updateOne(
-          { _id: new ObjectId(id) },
-          {
-            $push: { completionHistory: new Date().toISOString() },
-            $inc: { currentStreak: 1 },
-            $set: { updatedAt: new Date().toISOString() },
-          }
-        );
-
-        res.send({
-          success: true,
-          updateResult,
-        });
-      } catch (error) {
-        console.error("❌ Failed to mark habit complete:", error);
-        res.status(500).send({ error: "Failed to update habit" });
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ error: "Invalid habit ID" });
       }
+
+      const habit = await habitsCollection.findOne({ _id: new ObjectId(id) });
+      if (!habit) {
+        return res.status(404).send({ error: "Habit not found" });
+      }
+
+      const today = new Date().toISOString().split("T")[0];
+      const alreadyMarked = habit.completionHistory?.some((d) =>
+        d.startsWith(today)
+      );
+
+      if (alreadyMarked) {
+        return res.status(400).send({
+          error: "Already marked today",
+          message: "Already marked today",
+        });
+      }
+
+      const updateResult = await habitsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $push: { completionHistory: new Date().toISOString() },
+          $inc: { currentStreak: 1 },
+          $set: { updatedAt: new Date().toISOString() },
+        }
+      );
+
+      res.send({
+        success: true,
+        updateResult,
+      });
     });
     //! --------------------------------------
     //! habit update in my habit pg
     app.patch("/habits/:id", verifyToken, async (req, res) => {
-      try {
-        const id = req.params.id;
-        const updatedData = req.body;
+      const id = req.params.id;
+      const updatedData = req.body;
 
-        if (!ObjectId.isValid(id)) {
-          return res.status(400).send({ error: "Invalid habit ID" });
-        }
-
-        const updateFields = {
-          title: updatedData.title,
-          description: updatedData.description,
-          category: updatedData.category,
-          imageURL: updatedData.imageURL || "", // optional re-upload
-          updatedAt: new Date().toISOString(),
-        };
-
-        const result = await habitsCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: updateFields }
-        );
-
-        res.send({ success: true });
-      } catch (error) {
-        console.error("❌ Failed to update habit:", error);
-        res.status(500).send({ error: "Failed to update habit" });
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ error: "Invalid habit ID" });
       }
+
+      const updateFields = {
+        title: updatedData.title,
+        description: updatedData.description,
+        category: updatedData.category,
+        imageURL: updatedData.imageURL || "", // optional re-upload
+        updatedAt: new Date().toISOString(),
+      };
+
+      const result = await habitsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateFields }
+      );
+
+      res.send({ success: true });
     });
 
     //! --------------------------------------
     //! habit deletr in my habit pg
     app.delete("/habits/:id", async (req, res) => {
-      try {
-        const id = req.params.id;
+      const id = req.params.id;
 
-        if (!ObjectId.isValid(id)) {
-          return res.status(400).send({ error: "Invalid habit ID" });
-        }
-
-        const result = await habitsCollection.deleteOne({
-          _id: new ObjectId(id),
-        });
-
-        if (result.deletedCount === 0) {
-          return res.status(404).send({ error: "Habit not found" });
-        }
-
-        res.send({ success: true });
-      } catch (error) {
-        console.error("❌ Failed to delete habit:", error);
-        res.status(500).send({ error: "Failed to delete habit" });
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ error: "Invalid habit ID" });
       }
+
+      const result = await habitsCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+
+      if (result.deletedCount === 0) {
+        return res.status(404).send({ error: "Habit not found" });
+      }
+
+      res.send({ success: true });
     });
 
     //! --------------------------------------
