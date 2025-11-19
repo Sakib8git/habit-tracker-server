@@ -19,7 +19,17 @@ This is the backend server for the Habit Tracker web application. Built with Exp
 - **dotenv** – Environment variable management
 
 ---
+## Dependencies
 
+```json
+ "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "firebase-admin": "^13.6.0",
+    "mongodb": "^7.0.0"
+  }
+```
 
 ---
 
@@ -34,6 +44,7 @@ cd habit-tracker-server`
 
 PORT=3000
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.kyh1mx2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
 
 
 
