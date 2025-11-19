@@ -33,5 +33,6 @@ cd habit-tracker-server`
 `nodemon index.js`
 
 PORT=3000
-MONGODB_URI=your_mongodb_connection_string
-FIREBASE_PROJECT_ID=your_project_id
+MONGODB_URI=${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}
+
+
