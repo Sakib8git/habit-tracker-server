@@ -33,6 +33,7 @@ cd habit-tracker-server`
 `nodemon index.js`
 
 PORT=3000
-MONGODB_URI=${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}
+const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.kyh1mx2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
 
 
